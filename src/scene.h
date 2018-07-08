@@ -80,7 +80,7 @@ struct Object
 	int pigm;
 	int material;
 
-	virtual bool intersect(Ray, float&);
+	virtual bool intersect(Ray, float&) {};
 };
 
 struct Sphere: Object

@@ -26,11 +26,92 @@ int main(int argc, char **argv)
 	const char* imageName = argv[2];
 
 	// recebe entrada
+	FILE* f = fopen(fileName, "r");	
+	float x, y, z;
+	float af;
+	int aux;
+
+	vector<Light> lights;
+	vector<Pigm> pigms;
+	vector<Material> materials;
+	vector<Object> objects;
+
 	// recebe coordenadas da camera
+	fscanf(f, "%f %f %f\n", &x, &y, &z);
+	Vec pos(x, y, z);
+	fscanf(f, "%f %f %f\n", &x, &y, &z);
+	Vec dir(x, y, z);
+	fscanf(f, "%f %f %f\n", &x, &y, &z);
+	Vec up(x, y, z);
+	fscanf(f, "%f\n", &af);
+	Camera camera(pos, dir, up, af);
+
 	// declara lista de luzes
+	fscanf(f, "%i\n", aux);
+	for(int i = 0; i < aux; i++)
+	{
+		fscanf(f, "%f %f %f", &x, &y, &z);
+		pos = Vec(x, y, z);
+		fscanf(f, "%f %f %f", &x, &y, &z);
+		dir = Vec(x, y, z);
+		fscanf(f, "%f %f %f\n", &x, &y, &z);
+		lights.push_back(Light(pos, dir, x, y, z));
+	}
+
 	// recebe pigmentos
+	fscanf(f, "%i\n", aux);
+	for(int i = 0; i < aux; i++)
+	{
+		string type;
+		fscanf(f, "%s", type);
+		pigms.push_back(Pigm(type));
+		if(type == "solid")
+		{
+			fscanf(f, "%f %f %f\n", &x, &y, &z);
+			pigms[i].color1 = Vec(x, y, z);
+		}
+		else if(type == "checker")
+		{
+			fscanf(f, "%f %f %f", &x, &y, &z);
+			pigms[i].color1 = Vec(x, y, z);
+			fscanf(f, "%f %f %f", &x, &y, &z);
+			pigms[i].color2 = Vec(x, y, z);
+			fscanf(f, "%i\n", &pigms[i].squareSide);
+		}
+		else if(type == "texmap")
+		{
+			string imageName;
+			fscanf(f, "%s\n", imageName);
+			pigms[i].image = fopen(imageName.c_str(), "r");
+		}
+	}
+
 	// recebe acabamentos
+	fscanf(f, "%i\n", aux);
+	for(int i = 0; i < aux; i++)
+	{
+		float a, d, s, se, kr, kt, ior;
+		fscanf(f, "%f %f %f %f %f %f %f\n", &a, &d, &s, &se, &kr, &kt, &ior);
+		materials.push_back(Material(a, d, s, se, kr, kt, ior));
+	}
+
 	// declara lista de objetos
+	fscanf(f, "%i\n", aux);
+	for(int i = 0; i < aux; i++)
+	{
+		string type;
+		int p, m;
+		fscanf(f, "%i %i %s", &p, &m, type);
+		if(type == "sphere")
+		{
+			fscanf(f, "%f %f %f %f\n", &x, &y, &z, &af);
+			objects.push_back(Sphere(p, m, Vec(x, y, z), af));
+		}
+		else if(type == "polyhedron")
+		{
+		}
+	}
+
 
 	// lanca um raio para cada pixel na tela
 	for(int i = 0; i < largura; i++)
