@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		cout<<"Uso: ./exec <arquivo entrada> <arquivo saida> <largura(opcional)> <altura(opcional)>";
+		cout<<"Uso: ./a.out <arquivo entrada> <arquivo saida> <largura(opcional)> <altura(opcional)>"<<endl;
 		exit(1);
 	}
 
@@ -45,6 +45,7 @@ int main(int argc, char **argv)
 			// se nao, soma cor difusa (ponderado pelo coeficiente
 			// se angulo da normal com direçao a luz < threshold, soma luz especular ponderada pelo coeficiente
 			// se ha coeficiente de reflexao: lança mais raios recursivamente
+			// desenha cor no pixel do arquivo de saida
 		}
 	}
 }
