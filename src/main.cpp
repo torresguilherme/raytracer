@@ -143,8 +143,6 @@ int main(int argc, char **argv)
 			
 			// se ha coeficiente de reflexao: lança mais raios recursivamente
 			
-			// desenha cor no pixel do arquivo de saida
-			
 			fprintf(out, "%i %i %i\n", (int)color.x, (int)color.y, (int)color.z);
 		}
 	}
