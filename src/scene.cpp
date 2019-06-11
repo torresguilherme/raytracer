@@ -1,4 +1,4 @@
-#include "scene.h"
+#include "scene.hpp"
 #include <cmath>
  
 Vec::Vec()
@@ -15,9 +15,18 @@ Vec::Vec(float _x, float _y, float _z)
 	z = _z;
 }
 
-float Vec::dot(Vec other)
+float Vec::dot(const Vec& other)
 {
 	return(x*other.x + y*other.y + z*other.z);
+}
+
+Vec Vec::cross(const Vec& other)
+{
+	return Vec(
+		y * other.z - z * other.y,
+		x * other.z - z * other.x,
+		x * other.y - y * other.x
+	);
 }
 
 float Vec::magnitude()
@@ -30,24 +39,34 @@ Vec Vec::normalize()
 	return Vec(x/magnitude(), y/magnitude(), z/magnitude());
 }
 
-Vec Vec::operator+(Vec other)
+Vec Vec::operator+(const Vec& other)
 {
 	return Vec(x+other.x, y+other.y, z+other.z);
 }
 
-Vec Vec::operator-(Vec other)
+Vec Vec::operator-(const Vec& other)
 {
 	return Vec(x-other.x, y-other.y, z-other.z);
 }
 
-Vec Vec::operator*(Vec other)
+Vec Vec::operator*(const Vec& other)
 {
 	return Vec(x*other.x, y*other.y, z*other.z);
 }
 
-Vec Vec::operator/(Vec other)
+Vec Vec::operator/(const Vec& other)
 {
 	return Vec(x/other.x, y/other.y, z/other.z);
+}
+
+Vec Vec::operator*(float scalar)
+{
+	return Vec(x*scalar, y*scalar, z*scalar);
+}
+
+Vec Vec::operator/(float scalar)
+{
+	return Vec(x/scalar, y/scalar, z/scalar);
 }
 /************************************/
 
@@ -76,34 +95,3 @@ Light::Light(Vec c, Vec p, float a, float pa, float pa2)
 	squarePropAten = pa2;
 }
 /************************************/
-
-Pigm::Pigm(std::string t)
-{
-	type = t;
-}
-/************************************/
-
-Material::Material(float a, float d, float s, float se, float kr, float kt, float i)
-{
-	ambient = a;
-	diffuse = d;
-	specular = s;
-	specularExp = se;
-	reflection = kr;
-	transmission = kt;
-	ior = i;
-}
-/************************************/
-
-Sphere::Sphere(int p, int m, Vec c, float r)
-{
-	pigm = p;
-	material = m;
-	pos = c;
-	radius = r;
-}
-
-bool Sphere::intersect(Ray ray, float& depth)
-{
-	return false;
-}

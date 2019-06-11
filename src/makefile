@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -O3
+CFLAGS = -O3 -std=c++17
 SRC = main.cpp scene.cpp
 
 all:
