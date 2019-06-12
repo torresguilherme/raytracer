@@ -1,50 +1,35 @@
-struct Vec
+#ifndef SCENE_H_
+#define SCENE_H_
+
+#include <vector>
+#include <memory>
+#include "components.hpp"
+
+template<typename T, typename C>
+struct Shape
 {
-	float x;
-	float y;
-	float z;
+    Vec position;
+    Material<C> material;
+    std::unique_ptr<T> shape_type;
 
-	Vec();
-	Vec(float, float, float);
-
-	float dot(const Vec& other);
-	Vec cross(const Vec& other);
-	float magnitude();
-	Vec normalize();
-
-	Vec operator+(const Vec& other);
-	Vec operator-(const Vec& other);
-	Vec operator*(const Vec& other);
-	Vec operator/(const Vec& other);
-	Vec operator*(float scalar);
-	Vec operator/(float scalar);
+    Shape(Vec, Material<C>, T);
 };
 
-struct Ray
+struct Sphere
 {
-	Vec origin;
-	Vec dir;
+    float radius;
 
-	Ray(Vec, Vec);
+    Sphere(float);
 };
 
-struct Camera
+struct Mesh
 {
-	Vec pos;
-	Vec aim;
-	Vec up;
-	float abertura;
+    std::vector<Vec> vertices;
+    std::vector<Vec> normals;
+    std::vector<unsigned int> face_indices;
+    std::vector<unsigned int> normal_indices;
 
-	Camera(Vec, Vec, Vec, float);
+    Mesh(std::string);
 };
 
-struct Light
-{
-	Vec pos;
-	Vec color;
-	float constAten;
-	float propAten;
-	float squarePropAten;
-
-	Light(Vec, Vec, float, float, float);
-};
+#endif
