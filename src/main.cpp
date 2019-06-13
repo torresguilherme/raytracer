@@ -1,16 +1,15 @@
 #include <fstream>
 #include <iostream>
-#include <thread>
 #include <vector>
 #include <iterator>
-#include <functional>
-#include <algorithm>
 
 #include "raytracing.hpp"
 #include "components.hpp"
 #include "scene.hpp"
+#include "thread_pool.hpp"
 
 short int CHANNELS = 3;
+short int num_threads = std::thread::hardware_concurrency();
 
 int main(int argc, char **argv)
 {

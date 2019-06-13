@@ -1,19 +1,5 @@
 #include "components.hpp"
 #include <cmath>
- 
-Vec::Vec()
-{
-	x = 0;
-	y = 0;
-	z = 0;
-}
-
-Vec::Vec(float _x, float _y, float _z)
-{
-	x = _x;
-	y = _y;
-	z = _z;
-}
 
 float Vec::dot(const Vec& other)
 {
@@ -68,30 +54,3 @@ Vec Vec::operator/(float scalar)
 {
 	return Vec(x/scalar, y/scalar, z/scalar);
 }
-/************************************/
-
-Ray::Ray(Vec o, Vec d)
-{
-	origin = o;
-	dir = d.normalize();
-}
-/************************************/
-
-Camera::Camera(Vec p, Vec a, Vec u, float ab)
-{
-	pos = p;
-	aim = a;
-	up = u;
-	abertura = ab;
-}
-/************************************/
-
-Light::Light(Vec c, Vec p, float a, float pa, float pa2)
-{
-	pos = p;
-	color = c;
-	constAten = a;
-	propAten = pa;
-	squarePropAten = pa2;
-}
-/************************************/

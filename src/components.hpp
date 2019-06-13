@@ -2,6 +2,7 @@
 #define COMPONENTS_H_
 
 #include <memory>
+#include <variant>
 
 struct Vec
 {
@@ -9,8 +10,12 @@ struct Vec
 	float y;
 	float z;
 
-	Vec();
-	Vec(float, float, float);
+	Vec(): x(0), y(0), z(0) {};
+	Vec(float _x, float _y, float _z):
+    x(_x),
+    y(_y),
+    z(_z)
+    {};
 
 	float dot(const Vec& other);
 	Vec cross(const Vec& other);
@@ -30,7 +35,10 @@ struct Ray
 	Vec origin;
 	Vec dir;
 
-	Ray(Vec, Vec);
+	Ray(Vec o, Vec d):
+    origin(o),
+    dir(d)
+    {};
 };
 
 struct Camera
@@ -38,37 +46,40 @@ struct Camera
 	Vec pos;
 	Vec aim;
 	Vec up;
-	float abertura;
+	float aperture;
 
-	Camera(Vec, Vec, Vec, float);
+	Camera(Vec p, Vec a, Vec u, float ap):
+    pos(p),
+    aim(a),
+    up(u),
+    aperture(ap)
+    {};
 };
 
 struct Light
 {
 	Vec pos;
 	Vec color;
-	float constAten;
-	float propAten;
-	float squarePropAten;
+	float const_aten;
+	float prop_aten;
+	float square_prop_aten;
 
-	Light(Vec, Vec, float, float, float);
-};
-
-template <typename T>
-struct Material
-{
-    Vec albedo;
-    std::string type;
-    std::unique_ptr<T> component;
-
-    Material(std::string, Vec, T);
+	Light(Vec p, Vec c, float ca, float pa, float spa):
+    pos(p),
+    color(c),
+    const_aten(ca),
+    prop_aten(pa),
+    square_prop_aten(spa)
+    {};
 };
 
 struct LambertComponent
 {
     float k_diffuse;
 
-    LambertComponent(float);
+    LambertComponent(float kd):
+    k_diffuse(kd)
+    {};
 };
 
 struct ReflectComponent
@@ -76,7 +87,10 @@ struct ReflectComponent
     float k_attenuation;
     float fuzz;
 
-    ReflectComponent(float, float);
+    ReflectComponent(float ka, float f):
+    k_attenuation(ka),
+    fuzz(f)
+    {};
 };
 
 struct DielectricComponent
@@ -85,7 +99,26 @@ struct DielectricComponent
     float k_refraction;
     float fuzz;
 
-    DielectricComponent(float, float, float);
+    DielectricComponent(float ka, float kr, float f):
+    k_attenuation(ka),
+    k_refraction(kr),
+    fuzz(f)
+    {};
+};
+
+using MaterialComponent = std::variant<LambertComponent, DielectricComponent, ReflectComponent>;
+
+struct Material
+{
+    Vec albedo;
+    std::string type;
+    MaterialComponent component;
+
+    Material(std::string t, Vec a, MaterialComponent c):
+    type(t),
+    albedo(a),
+    component(c)
+    {};
 };
 
 #endif
