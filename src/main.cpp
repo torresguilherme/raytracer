@@ -9,6 +9,7 @@
 #include "thread_pool.hpp"
 
 short int CHANNELS = 3;
+short int RAYS_PER_PIXEL = 100;
 short int num_threads = std::thread::hardware_concurrency();
 
 int main(int argc, char **argv)
@@ -54,6 +55,10 @@ int main(int argc, char **argv)
     scene.spheres.push_back(Shape<Sphere>(Vec(0.0, -100.5, 0.0), ground_material, Sphere(100.0)));
 
     std::cout<<"Casting rays\n";
+    for(short int i = 0; i < height; i++)
+    {
+        trace_rays_in_row(scene, pixel_array, i, width, height, RAYS_PER_PIXEL);
+    }
 
 	// write to file
     std::cout<<"Writing to file\n";

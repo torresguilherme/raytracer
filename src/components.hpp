@@ -20,6 +20,10 @@ struct Vec
 	Vec cross(const Vec& other);
 	float magnitude();
 	Vec normalize();
+    float euclid_distance(const Vec& other);
+    Vec reflect(Vec& normal);
+    Vec refract(Vec& normal, float ni_over_nt);
+    Vec interpolate(Vec& other, float coefficient);
 
 	Vec operator+(const Vec& other);
 	Vec operator-(const Vec& other);
