@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <memory>
-#include <variant>
 #include "components.hpp"
 
 struct Sphere
@@ -25,15 +24,14 @@ struct Mesh
     Mesh(std::string);
 };
 
-using ShapeType = std::variant<Sphere, Mesh>;
-
+template <typename ShapeType>
 struct Shape
 {
     Vec position;
     Material material;
     ShapeType shape_type;
 
-    Shape(Vec v, Material m, ShapeType t):
+    Shape(Vec v, const Material& m, const ShapeType& t):
     position(v),
     material(m),
     shape_type(t)
@@ -42,7 +40,8 @@ struct Shape
 
 struct Scene
 {
-    std::vector<Shape> shapes;
+    std::vector<Shape<Sphere>> spheres;
+    std::vector<Shape<Mesh>> meshes;
     std::vector<Light> lights;
     Camera camera;
 

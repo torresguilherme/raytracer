@@ -2,7 +2,6 @@
 #define COMPONENTS_H_
 
 #include <memory>
-#include <variant>
 
 struct Vec
 {
@@ -106,18 +105,20 @@ struct DielectricComponent
     {};
 };
 
-using MaterialComponent = std::variant<LambertComponent, DielectricComponent, ReflectComponent>;
-
 struct Material
 {
     Vec albedo;
     std::string type;
-    MaterialComponent component;
+    LambertComponent lambert;
+    ReflectComponent reflect;
+    DielectricComponent dielectric;
 
-    Material(std::string t, Vec a, MaterialComponent c):
+    Material(std::string t, Vec a, float kd=0.0, float ka=0.0, float f=0.0, float kr=0.0):
     type(t),
     albedo(a),
-    component(c)
+    lambert(LambertComponent(kd)),
+    reflect(ReflectComponent(ka, f)),
+    dielectric(DielectricComponent(ka, kr, f))
     {};
 };
 
