@@ -16,7 +16,7 @@ Vec trace_rays_in_pixel(const Scene& scene, short int row, short int col, short 
 {
     std::vector<Vec> colors;
 
-    int sqrt_rpp = (int)floor(sqrtf32((float)rpp));
+    int sqrt_rpp = (int)floor(sqrt((float)rpp));
     for(short i = 0; i < rpp; i++)
     {
         float sampling_offset[2] = {
