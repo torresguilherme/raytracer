@@ -30,11 +30,13 @@ struct Shape
     Vec position;
     Material material;
     ShapeType shape_type;
+    bool emitting;
 
-    Shape(Vec v, const Material& m, const ShapeType& t):
+    Shape(Vec v, const Material& m, const ShapeType& t, bool emitting=false):
     position(v),
     material(m),
-    shape_type(t)
+    shape_type(t),
+    emitting(emitting)
     {};
 };
 

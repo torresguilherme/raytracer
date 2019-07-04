@@ -53,32 +53,39 @@ Vec Vec::interpolate(Vec& other, float coefficient)
     return *this * coefficient + other * (float)(1.0 - coefficient);
 }
 
-Vec Vec::operator+(const Vec& other)
+Vec Vec::operator+(const Vec& other) const
 {
 	return Vec(x+other.x, y+other.y, z+other.z);
 }
 
-Vec Vec::operator-(const Vec& other)
+Vec Vec::operator-(const Vec& other) const
 {
 	return Vec(x-other.x, y-other.y, z-other.z);
 }
 
-Vec Vec::operator*(const Vec& other)
+Vec Vec::operator*(const Vec& other) const
 {
 	return Vec(x*other.x, y*other.y, z*other.z);
 }
 
-Vec Vec::operator/(const Vec& other)
+Vec Vec::operator/(const Vec& other) const
 {
 	return Vec(x/other.x, y/other.y, z/other.z);
 }
 
-Vec Vec::operator*(float scalar)
+Vec Vec::operator*(float scalar) const
 {
 	return Vec(x*scalar, y*scalar, z*scalar);
 }
 
-Vec Vec::operator/(float scalar)
+Vec Vec::operator/(float scalar) const
 {
 	return Vec(x/scalar, y/scalar, z/scalar);
+}
+
+/*****************************************/
+
+Vec Ray::point_at_t(float t)
+{
+    return this->origin + this->dir * t;
 }

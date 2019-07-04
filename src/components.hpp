@@ -25,12 +25,12 @@ struct Vec
     Vec refract(Vec& normal, float ni_over_nt);
     Vec interpolate(Vec& other, float coefficient);
 
-	Vec operator+(const Vec& other);
-	Vec operator-(const Vec& other);
-	Vec operator*(const Vec& other);
-	Vec operator/(const Vec& other);
-	Vec operator*(float scalar);
-	Vec operator/(float scalar);
+	Vec operator+(const Vec& other) const;
+	Vec operator-(const Vec& other) const;
+	Vec operator*(const Vec& other) const;
+	Vec operator/(const Vec& other) const;
+	Vec operator*(float scalar) const;
+	Vec operator/(float scalar) const;
 };
 
 struct Ray
@@ -40,8 +40,10 @@ struct Ray
 
 	Ray(Vec o, Vec d):
     origin(o),
-    dir(d)
+    dir(d.normalize())
     {};
+
+    Vec point_at_t(float t);
 };
 
 struct Camera
