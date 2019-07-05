@@ -9,7 +9,7 @@
 #include "thread_pool.hpp"
 
 short int CHANNELS = 3;
-short int RAYS_PER_PIXEL = 100;
+short int RAYS_PER_PIXEL = 36;
 short int num_threads = std::thread::hardware_concurrency();
 
 int main(int argc, char **argv)

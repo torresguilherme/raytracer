@@ -57,7 +57,11 @@ Vec trace_rays_in_pixel(const Scene& scene, short int row, short int col, short 
 
         std::tuple<float, Vec, Vec> tuple = get_next_intersection(scene, ray);
         
-        Vec color = get_occlusion(scene, ray, std::get<0>(tuple), std::get<1>(tuple), std::get<2>(tuple));
+        Vec color = std::get<1>(tuple);
+        if(std::get<0>(tuple) > 0)
+        {
+            color = get_occlusion(scene, ray, std::get<0>(tuple), std::get<1>(tuple), std::get<2>(tuple));
+        }
 
         colors.push_back(color);
     }
@@ -65,14 +69,14 @@ Vec trace_rays_in_pixel(const Scene& scene, short int row, short int col, short 
     return mean(colors) * 255.0;
 }
 
-std::tuple<float, Vec, Vec> get_next_intersection(const Scene& scene, Ray ray)
+std::tuple<float, Vec, Vec> get_next_intersection(const Scene& scene, Ray ray, bool occlusion, bool is_refracted, bool self_collision)
 {
     float min_distance = vision_range;
     Vec color = SKY;
     Vec normal = Vec();
     for(auto sphere : scene.spheres)
     {
-        std::pair<float, Vec> intersection = intersects(scene, sphere, ray, SPHERE_KIND);
+        std::pair<float, Vec> intersection = intersects(scene, sphere, ray, SPHERE_KIND, occlusion, is_refracted, self_collision);
         if(intersection.first < min_distance && intersection.first > 0)
         {
             min_distance = intersection.first;
@@ -81,11 +85,16 @@ std::tuple<float, Vec, Vec> get_next_intersection(const Scene& scene, Ray ray)
         }
     }
 
-    return std::make_tuple(min_distance, color, normal);
+    if(min_distance < vision_range)
+    {
+        return std::make_tuple(min_distance, color, normal);
+    }
+
+    return std::make_tuple(-1, SKY, Vec());
 }
 
 template <typename ShapeType>
-std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& shape, Ray ray, const int type, bool occlusion, bool is_refracted)
+std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& shape, Ray ray, const int type, bool occlusion, bool is_refracted, bool self_collision)
 {
     switch (type)
     {
@@ -99,7 +108,7 @@ std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& sha
             if(discriminant > 0)
             {
                 float solution = (-b - sqrt(discriminant)) / (2 * a);
-                if (solution < too_near)
+                if (solution < too_near && !self_collision)
                 {
                     return std::make_pair(-1, SKY);
                 }
@@ -116,7 +125,7 @@ std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& sha
                             Vec(rand() / RAND_MAX, rand() / RAND_MAX, rand() / RAND_MAX) * shape.material.reflect.fuzz
                     );
 
-                    std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray);
+                    std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, is_refracted, false);
                     return std::make_pair(solution, 
                         std::get<1>(result).interpolate(shape.material.albedo, shape.material.reflect.k_attenuation)
                     );
@@ -138,17 +147,15 @@ Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& no
     for(auto light : scene.lights)
     {
         Ray ray_to_light = Ray(ray.point_at_t(t), light.pos - ray.point_at_t(t));
-        for(auto sphere : scene.spheres)
+        std::tuple<float, Vec, Vec> tuple = get_next_intersection(scene, ray_to_light, true, false, false);
+        float distance = std::get<0>(tuple);
+        if(distance > 0 && distance < ray_to_light.origin.euclid_distance(light.pos))
         {
-            if(intersects(scene, sphere, ray_to_light, SPHERE_KIND, true).first > too_near)
-            {
-                occluded_colors.push_back(Vec());
-            }
-
-            else
-            {
-                occluded_colors.push_back(color * ((ray_to_light.dir.dot(ray.dir.reflect(normal)) / 2 + 0.5)));
-            }
+            occluded_colors.push_back(Vec());
+        }
+        else
+        {
+            occluded_colors.push_back(color * ((ray_to_light.dir.dot(ray.dir.reflect(normal)) / 2 + 0.5)));
         }
     }
 
