@@ -1,12 +1,12 @@
 #include "components.hpp"
 #include <cmath>
 
-float Vec::dot(const Vec& other)
+float Vec::dot(const Vec& other) const
 {
 	return(x*other.x + y*other.y + z*other.z);
 }
 
-Vec Vec::cross(const Vec& other)
+Vec Vec::cross(const Vec& other) const
 {
 	return Vec(
 		y * other.z - z * other.y,
@@ -15,27 +15,27 @@ Vec Vec::cross(const Vec& other)
 	);
 }
 
-float Vec::magnitude()
+float Vec::magnitude() const
 {
 	return sqrt(dot(*this));
 }
 
-Vec Vec::normalize()
+Vec Vec::normalize() const
 {
 	return Vec(x/magnitude(), y/magnitude(), z/magnitude());
 }
 
-float Vec::euclid_distance(const Vec& other)
+float Vec::euclid_distance(const Vec& other) const
 {
     return sqrt(pow(x - other.x, 2) + pow(y - other.y, 2) + pow(z - other.z, 2));
 }
 
-Vec Vec::reflect(Vec& normal)
+Vec Vec::reflect(const Vec& normal) const
 {
-    return *this - (normal * (float)2.0 * (*this).dot(normal));
+    return *this - (normal * (float)2.0 * this->dot(normal));
 }
 
-Vec Vec::refract(Vec& normal, float ni_over_nt)
+Vec Vec::refract(const Vec& normal, float ni_over_nt) const
 {
     Vec unit_v = this->normalize();
     float cosine = unit_v.dot(normal);
@@ -48,7 +48,7 @@ Vec Vec::refract(Vec& normal, float ni_over_nt)
     return this->reflect(normal);
 }
 
-Vec Vec::interpolate(Vec& other, float coefficient)
+Vec Vec::interpolate(const Vec& other, float coefficient) const
 {
     return *this * coefficient + other * (float)(1.0 - coefficient);
 }

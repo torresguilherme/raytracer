@@ -44,17 +44,17 @@ int main(int argc, char **argv)
     Scene scene = Scene(camera);
 
     // declare materials
-    Material red_material = Material("lambert", Vec(1.0, 0.0, 0.0), 0.7);
-    Material gold_material = Material("reflect", Vec(0.8, 0.8, 0.2), 0.0, 0.5, 0.1);
-    Material glass_material = Material("dielectric", Vec(0.9, 0.9, 0.9), 0.0, 0.1, 0.0, 1.7);
-    Material ground_material = Material("lambert", Vec(0.2, 0.3, 0.2), 0.6);
+    Material red_material = Material(LAMBERT_TYPE, Vec(1.0, 0.0, 0.0), 0.7);
+    Material gold_material = Material(REFLECT_TYPE, Vec(0.8, 0.8, 0.2), 0.0, 0.5, 0.1);
+    Material glass_material = Material(DIELECTRIC_TYPE, Vec(0.9, 0.9, 0.9), 0.0, 0.1, 0.0, 1.7);
+    Material ground_material = Material(LAMBERT_TYPE, Vec(0.2, 0.3, 0.2), 0.6);
 
     scene.spheres.push_back(Shape<Sphere>(Vec(0.0, 0.0, 5.0), red_material, Sphere(0.5)));
-    //scene.spheres.push_back(Shape<Sphere>(Vec(-1.0, -0.5, 4.5), glass_material, Sphere(1.0)));
-    //scene.spheres.push_back(Shape<Sphere>(Vec(1.0, -0.5, 4.5), gold_material, Sphere(1.0)));
+    //scene.spheres.push_back(Shape<Sphere>(Vec(-1.0, -0.5, 4.5), glass_material, Sphere(0.5)));
+    scene.spheres.push_back(Shape<Sphere>(Vec(1.0, -0.5, 4.5), gold_material, Sphere(0.5)));
     scene.spheres.push_back(Shape<Sphere>(Vec(0.0, -100.5, 0.0), ground_material, Sphere(100.0)));
 
-    scene.lights.push_back(Light(Vec(0.5, 0.5, 3.0), Vec(1.0, 1.0, 1.0), 0.0, 0.0, 0.0));
+    scene.lights.push_back(Light(Vec(3.5, 2.5, 3.0), Vec(1.0, 1.0, 1.0), 0.0, 0.0, 0.0));
 
     std::cout<<"Casting rays\n";
     for(short int i = 0; i < height; i++)

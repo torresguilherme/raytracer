@@ -1,6 +1,7 @@
 #include "raytracing.hpp"
 #include <cmath>
 #include <iostream>
+#include <random>
 
 Vec SKY = Vec(0.2, 0.5, 0.7);
 const float pixel_lenght = 0.005;
@@ -54,19 +55,9 @@ Vec trace_rays_in_pixel(const Scene& scene, short int row, short int col, short 
         ) - scene.camera.pos;
         Ray ray = Ray(scene.camera.pos, direction);
 
-        float min_distance = vision_range;
-        Vec color = SKY;
-        for(auto sphere : scene.spheres)
-        {
-            std::pair<float, Vec> intersection = intersects(sphere, ray, SPHERE_KIND);
-            if(intersection.first < min_distance && intersection.first > too_near)
-            {
-                min_distance = intersection.first;
-                color = intersection.second;
-            }
-        }
+        std::tuple<float, Vec, Vec> tuple = get_next_intersection(scene, ray);
         
-        color = get_occlusion(scene, ray, min_distance, color);
+        Vec color = get_occlusion(scene, ray, std::get<0>(tuple), std::get<1>(tuple), std::get<2>(tuple));
 
         colors.push_back(color);
     }
@@ -74,8 +65,27 @@ Vec trace_rays_in_pixel(const Scene& scene, short int row, short int col, short 
     return mean(colors) * 255.0;
 }
 
+std::tuple<float, Vec, Vec> get_next_intersection(const Scene& scene, Ray ray)
+{
+    float min_distance = vision_range;
+    Vec color = SKY;
+    Vec normal = Vec();
+    for(auto sphere : scene.spheres)
+    {
+        std::pair<float, Vec> intersection = intersects(scene, sphere, ray, SPHERE_KIND);
+        if(intersection.first < min_distance && intersection.first > 0)
+        {
+            min_distance = intersection.first;
+            color = intersection.second;
+            normal = (ray.point_at_t(min_distance) = sphere.position).normalize();
+        }
+    }
+
+    return std::make_tuple(min_distance, color, normal);
+}
+
 template <typename ShapeType>
-std::pair<float, Vec> intersects(const Shape<ShapeType>& shape, Ray ray, const int type, bool occlusion, bool is_refracted)
+std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& shape, Ray ray, const int type, bool occlusion, bool is_refracted)
 {
     switch (type)
     {
@@ -89,9 +99,27 @@ std::pair<float, Vec> intersects(const Shape<ShapeType>& shape, Ray ray, const i
             if(discriminant > 0)
             {
                 float solution = (-b - sqrt(discriminant)) / (2 * a);
-                if (shape.material.type == "lambert")
+                if (solution < too_near)
+                {
+                    return std::make_pair(-1, SKY);
+                }
+
+                if (shape.material.type == LAMBERT_TYPE)
                 {
                     return std::make_pair(solution, shape.material.albedo * shape.material.lambert.k_diffuse);
+                }
+                else if(shape.material.type == REFLECT_TYPE)
+                {
+                    Ray reflected_ray = Ray(
+                        ray.point_at_t(solution),
+                        ray.dir.reflect((ray.point_at_t(solution) - shape.position).normalize()) + 
+                            Vec(rand() / RAND_MAX, rand() / RAND_MAX, rand() / RAND_MAX) * shape.material.reflect.fuzz
+                    );
+
+                    std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray);
+                    return std::make_pair(solution, 
+                        std::get<1>(result).interpolate(shape.material.albedo, shape.material.reflect.k_attenuation)
+                    );
                 }
             }
             break;
@@ -104,7 +132,7 @@ std::pair<float, Vec> intersects(const Shape<ShapeType>& shape, Ray ray, const i
     return std::make_pair(-1, SKY);
 }
 
-Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color)
+Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& normal)
 {
     std::vector<Vec> occluded_colors;
     for(auto light : scene.lights)
@@ -112,14 +140,14 @@ Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color)
         Ray ray_to_light = Ray(ray.point_at_t(t), light.pos - ray.point_at_t(t));
         for(auto sphere : scene.spheres)
         {
-            if(intersects(sphere, ray_to_light, SPHERE_KIND, true).first > too_near)
+            if(intersects(scene, sphere, ray_to_light, SPHERE_KIND, true).first > too_near)
             {
                 occluded_colors.push_back(Vec());
             }
 
             else
             {
-                occluded_colors.push_back(color * (1 - (ray_to_light.dir.dot(ray.dir) / 2 + 0.5)));
+                occluded_colors.push_back(color * ((ray_to_light.dir.dot(ray.dir.reflect(normal)) / 2 + 0.5)));
             }
         }
     }

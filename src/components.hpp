@@ -3,6 +3,10 @@
 
 #include <memory>
 
+const int LAMBERT_TYPE = 0;
+const int REFLECT_TYPE = 1;
+const int DIELECTRIC_TYPE = 2;
+
 struct Vec
 {
 	float x;
@@ -16,14 +20,14 @@ struct Vec
     z(_z)
     {};
 
-	float dot(const Vec& other);
-	Vec cross(const Vec& other);
-	float magnitude();
-	Vec normalize();
-    float euclid_distance(const Vec& other);
-    Vec reflect(Vec& normal);
-    Vec refract(Vec& normal, float ni_over_nt);
-    Vec interpolate(Vec& other, float coefficient);
+	float dot(const Vec& other) const;
+	Vec cross(const Vec& other) const;
+	float magnitude() const;
+	Vec normalize() const;
+    float euclid_distance(const Vec& other) const;
+    Vec reflect(const Vec& normal) const;
+    Vec refract(const Vec& normal, float ni_over_nt) const;
+    Vec interpolate(const Vec& other, float coefficient) const;
 
 	Vec operator+(const Vec& other) const;
 	Vec operator-(const Vec& other) const;
@@ -114,12 +118,12 @@ struct DielectricComponent
 struct Material
 {
     Vec albedo;
-    std::string type;
+    int type;
     LambertComponent lambert;
     ReflectComponent reflect;
     DielectricComponent dielectric;
 
-    Material(std::string t, Vec a, float kd=0.0, float ka=0.0, float f=0.0, float kr=0.0):
+    Material(int t, Vec a, float kd=0.0, float ka=0.0, float f=0.0, float kr=0.0):
     type(t),
     albedo(a),
     lambert(LambertComponent(kd)),
