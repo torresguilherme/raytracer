@@ -127,8 +127,36 @@ std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& sha
 
                     std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, is_refracted, false);
                     return std::make_pair(solution, 
-                        std::get<1>(result).interpolate(shape.material.albedo, shape.material.reflect.k_attenuation)
+                        std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.reflect.k_attenuation)
                     );
+                }
+                else if(shape.material.type == DIELECTRIC_TYPE)
+                {
+                    if(is_refracted)
+                    {
+                        Ray reflected_ray = Ray(
+                            ray.point_at_t(solution),
+                            ray.dir.refract((ray.point_at_t(solution) - shape.position).normalize(), shape.material.dielectric.k_refraction) + 
+                                Vec(rand() / RAND_MAX, rand() / RAND_MAX, rand() / RAND_MAX) * shape.material.dielectric.fuzz
+                        );
+
+                        std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, false, false);
+                        return std::make_pair(solution, 
+                            std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation)
+                        );
+                    }
+                    else
+                    {
+                        Ray reflected_ray = Ray(
+                            ray.point_at_t(solution),
+                            ray.dir.refract((ray.point_at_t(solution) - shape.position).normalize(), 1.0/shape.material.dielectric.k_refraction) + 
+                                Vec(rand() / RAND_MAX, rand() / RAND_MAX, rand() / RAND_MAX) * shape.material.dielectric.fuzz
+                        );
+                        std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, true, false);
+                        return std::make_pair(solution, 
+                            std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation)
+                        );
+                    }
                 }
             }
             break;

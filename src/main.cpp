@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     Material ground_material = Material(LAMBERT_TYPE, Vec(0.2, 0.3, 0.2), 0.6);
 
     scene.spheres.push_back(Shape<Sphere>(Vec(0.0, 0.0, 5.0), red_material, Sphere(0.5)));
-    //scene.spheres.push_back(Shape<Sphere>(Vec(-1.0, -0.5, 4.5), glass_material, Sphere(0.5)));
+    scene.spheres.push_back(Shape<Sphere>(Vec(-1.0, -0.5, 4.5), glass_material, Sphere(0.5)));
     scene.spheres.push_back(Shape<Sphere>(Vec(1.0, -0.5, 4.5), gold_material, Sphere(0.5)));
     scene.spheres.push_back(Shape<Sphere>(Vec(0.0, -100.5, 0.0), ground_material, Sphere(100.0)));
 
