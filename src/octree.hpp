@@ -1,3 +1,5 @@
+#pragma once
+
 #include "components.hpp"
 #include "scene.hpp"
 #include <vector>

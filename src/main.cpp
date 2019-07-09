@@ -58,11 +58,12 @@ int main(int argc, char **argv)
     scene.lights.push_back(Light(Vec(3.5, 2.5, 3.0), Vec(1.0, 1.0, 1.0), 0.0, 0.0, 0.0));
 
     std::cout<<"Casting rays\n";
-    ThreadPool<std::function<void(const Scene&, std::vector<short>&, short, short, short, short)>> pool = 
-        ThreadPool<std::function<void(const Scene&, std::vector<short>&, short, short, short, short)>>(num_threads);
+    ThreadPool<std::function<void()>> pool(num_threads);
     for(short int i = 0; i < height; i++)
     {
-        pool.emplace(std::bind(trace_rays_in_row, scene, pixel_array, i, width, height, RAYS_PER_PIXEL));
+        pool.emplace([&scene, &pixel_array, i, width, height, RAYS_PER_PIXEL] {
+            trace_rays_in_row(scene, pixel_array, i, width, height, RAYS_PER_PIXEL);
+        });
     }
     pool.join_and_stop();
 

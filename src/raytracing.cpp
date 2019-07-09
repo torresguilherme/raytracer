@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include <random>
+#include <mutex>
 
 Vec SKY = Vec(0.2, 0.5, 0.7);
 const float pixel_lenght = 0.005;
@@ -9,6 +10,7 @@ const float vision_range = MAXFLOAT;
 const float too_near = 0.0005;
 const int SPHERE_KIND = 0;
 const int MESH_KIND = 1;
+std::mutex mu;
 
 Vec mean(std::vector<Vec> vectors)
 {
@@ -24,7 +26,9 @@ Vec mean(std::vector<Vec> vectors)
 
 void trace_rays_in_row(const Scene& scene, std::vector<short>& pixel_array, short row, short width, short height, short rpp)
 {
+    std::unique_lock<std::mutex> lock(mu);
     std::cout<<"Rendering row: "<<row<<'\n';
+    lock.unlock();
     for(short int i = 0; i < width; i++)
     {
         Vec result_color = trace_rays_in_pixel(scene, row, i, width, height, rpp);
