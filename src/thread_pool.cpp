@@ -1,8 +1,9 @@
 #include "thread_pool.hpp"
 
-template <typename Task>
+template <class Task>
 ThreadPool<Task>::ThreadPool(std::size_t nt): num_threads(nt)
 {
+    stop = false;
     for(uint i = 0; i < num_threads; i++)
     {
         threads.emplace_back([=] {
@@ -26,22 +27,32 @@ ThreadPool<Task>::ThreadPool(std::size_t nt): num_threads(nt)
     }
 }
 
-template <typename Task>
+// copy constructor
+template <class Task>
+ThreadPool<Task>::ThreadPool(ThreadPool&& other)
+{
+    num_threads = other.num_threads;
+    threads = other.threads;
+    stop = other.stop;
+    tasks = other.tasks;
+}
+
+template <class Task>
 ThreadPool<Task>::~ThreadPool() noexcept
 {
     join_and_stop();
 }
 
-template <typename Task>
+template <class Task>
 void ThreadPool<Task>::emplace(Task new_task)
 {
     tasks.emplace(std::move(new_task));
 }
 
-template <typename Task>
+template <class Task>
 void ThreadPool<Task>::join_and_stop()
 {
-    stop.notify_all();
+    stop = true;
     for(uint i = 0; i < num_threads; i++)
     {
         threads[i].join();
