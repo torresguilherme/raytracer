@@ -22,7 +22,7 @@ Vec mean(std::vector<Vec> vectors)
     return sum;
 }
 
-void trace_rays_in_row(const Scene& scene, std::vector<short int>& pixel_array, short int row, short int width, short int height, short int rpp)
+void trace_rays_in_row(const Scene& scene, std::vector<short>& pixel_array, short row, short width, short height, short rpp)
 {
     std::cout<<"Rendering row: "<<row<<'\n';
     for(short int i = 0; i < width; i++)
@@ -34,7 +34,7 @@ void trace_rays_in_row(const Scene& scene, std::vector<short int>& pixel_array, 
     }
 }
 
-Vec trace_rays_in_pixel(const Scene& scene, short int row, short int col, short int width, short int height, short int rpp)
+Vec trace_rays_in_pixel(const Scene& scene, short row, short col, short width, short height, short rpp)
 {
     std::vector<Vec> colors;
 
