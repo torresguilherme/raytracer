@@ -126,7 +126,7 @@ std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& sha
                     Ray reflected_ray = Ray(
                         ray.point_at_t(solution),
                         ray.dir.reflect((ray.point_at_t(solution) - shape.position).normalize()) + 
-                            Vec(rand() / RAND_MAX, rand() / RAND_MAX, rand() / RAND_MAX) * shape.material.reflect.fuzz
+                            Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.reflect.fuzz
                     );
 
                     std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, is_refracted, false);
@@ -141,7 +141,7 @@ std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& sha
                         Ray reflected_ray = Ray(
                             ray.point_at_t(solution),
                             ray.dir.refract((ray.point_at_t(solution) - shape.position).normalize(), shape.material.dielectric.k_refraction) + 
-                                Vec(rand() / RAND_MAX, rand() / RAND_MAX, rand() / RAND_MAX) * shape.material.dielectric.fuzz
+                                Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.dielectric.fuzz
                         );
 
                         std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, false, false);

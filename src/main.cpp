@@ -1,6 +1,8 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <random>
+#include <ctime>
 #include <iterator>
 
 #include "raytracing.hpp"
@@ -13,6 +15,7 @@ std::size_t num_threads = std::thread::hardware_concurrency();
 
 int main(int argc, char **argv)
 {
+    srand(time(NULL));
     short int RAYS_PER_PIXEL = 36;
 
 	if(argc < 2)
@@ -46,7 +49,7 @@ int main(int argc, char **argv)
 
     // declare materials
     Material red_material = Material(LAMBERT_TYPE, Vec(1.0, 0.0, 0.0), 0.7);
-    Material gold_material = Material(REFLECT_TYPE, Vec(0.8, 0.8, 0.2), 0.0, 0.5, 0.1);
+    Material gold_material = Material(REFLECT_TYPE, Vec(0.8, 0.8, 0.2), 0.0, 0.5, 0.6);
     Material glass_material = Material(DIELECTRIC_TYPE, Vec(0.9, 0.9, 0.9), 0.0, 0.1, 0.0, 1.7);
     Material ground_material = Material(LAMBERT_TYPE, Vec(0.2, 0.3, 0.2), 0.6);
 
