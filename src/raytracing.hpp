@@ -4,6 +4,7 @@
 #include "components.hpp"
 #include "scene.hpp"
 
+inline float max(float a, float b);
 Vec mean(std::vector<Vec> vectors);
 void trace_rays_in_row(const Scene& scene, std::vector<short>& pixel_array, short row, short width, short height, short rpp);
 Vec trace_rays_in_pixel(const Scene& scene, short row, short col, short width, short height, short rpp);

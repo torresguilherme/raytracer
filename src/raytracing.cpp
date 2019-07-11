@@ -12,6 +12,11 @@ const int SPHERE_KIND = 0;
 const int MESH_KIND = 1;
 std::mutex mu;
 
+inline float max(float a, float b)
+{
+    return a > b? a : b;
+}
+
 Vec mean(std::vector<Vec> vectors)
 {
     Vec sum = Vec();
@@ -85,7 +90,7 @@ std::tuple<float, Vec, Vec> get_next_intersection(const Scene& scene, Ray ray, b
         {
             min_distance = intersection.first;
             color = intersection.second;
-            normal = (ray.point_at_t(min_distance) = sphere.position).normalize();
+            normal = (ray.point_at_t(min_distance) - sphere.position).normalize();
         }
     }
 
@@ -157,7 +162,7 @@ std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& sha
                                 Vec(rand() / RAND_MAX, rand() / RAND_MAX, rand() / RAND_MAX) * shape.material.dielectric.fuzz
                         );
                         std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, true, false);
-                        return std::make_pair(solution, 
+                        return std::make_pair(occlusion ? solution : std::get<0>(result), 
                             std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation)
                         );
                     }
@@ -187,7 +192,8 @@ Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& no
         }
         else
         {
-            occluded_colors.push_back(color * ((ray_to_light.dir.dot(ray.dir.reflect(normal)) / 2 + 0.5)));
+            float cosine = ray_to_light.dir.dot(normal);
+            occluded_colors.push_back(color * max(0.0, cosine));
         }
     }
 
