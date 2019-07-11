@@ -71,14 +71,14 @@ struct Light
 	Vec color;
 	float const_aten;
 	float prop_aten;
-	float square_prop_aten;
+	float energy;
 
-	Light(Vec p, Vec c, float ca, float pa, float spa):
+	Light(Vec p, Vec c, float ca, float pa, float energy):
     pos(p),
     color(c),
     const_aten(ca),
     prop_aten(pa),
-    square_prop_aten(spa)
+    energy(energy)
     {};
 };
 

@@ -10,6 +10,7 @@ const float vision_range = MAXFLOAT;
 const float too_near = 0.0005;
 const int SPHERE_KIND = 0;
 const int MESH_KIND = 1;
+const float SHADOW_JITTER = 0.8;
 std::mutex mu;
 
 inline float max(float a, float b)
@@ -159,10 +160,10 @@ std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& sha
                         Ray reflected_ray = Ray(
                             ray.point_at_t(solution),
                             ray.dir.refract((ray.point_at_t(solution) - shape.position).normalize(), 1.0/shape.material.dielectric.k_refraction) + 
-                                Vec(rand() / RAND_MAX, rand() / RAND_MAX, rand() / RAND_MAX) * shape.material.dielectric.fuzz
+                                Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.dielectric.fuzz
                         );
                         std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, true, false);
-                        return std::make_pair(occlusion ? solution : std::get<0>(result), 
+                        return std::make_pair(!occlusion ? solution : std::get<0>(result), 
                             std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation)
                         );
                     }
@@ -183,7 +184,8 @@ Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& no
     std::vector<Vec> occluded_colors;
     for(auto light : scene.lights)
     {
-        Ray ray_to_light = Ray(ray.point_at_t(t), light.pos - ray.point_at_t(t));
+        Ray ray_to_light = Ray(ray.point_at_t(t) + normal * too_near,
+            light.pos - ray.point_at_t(t) + Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * SHADOW_JITTER);
         std::tuple<float, Vec, Vec> tuple = get_next_intersection(scene, ray_to_light, true, false, false);
         float distance = std::get<0>(tuple);
         if(distance > 0 && distance < ray_to_light.origin.euclid_distance(light.pos))
@@ -192,8 +194,8 @@ Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& no
         }
         else
         {
-            float cosine = ray_to_light.dir.dot(normal);
-            occluded_colors.push_back(color * max(0.0, cosine));
+            occluded_colors.push_back(color * light.energy * (1 / light.const_aten) *
+            (1 / (light.prop_aten * ray_to_light.origin.euclid_distance(light.pos) * ray_to_light.origin.euclid_distance(light.pos))));
         }
     }
 
