@@ -5,6 +5,9 @@
 #include <memory>
 #include "components.hpp"
 
+#define FLAT_SHADING 0
+#define PHONG_SHADING 1
+
 struct Sphere
 {
     float radius;
@@ -20,8 +23,9 @@ struct Mesh
     std::vector<unsigned int> vertex_indices;
     std::vector<unsigned int> uv_indices;
     std::vector<unsigned int> normal_indices;
+    int shading_type;
 
-    Mesh(std::string);
+    Mesh(std::string filename, int shading_type, const Vec& scale, const Vec& translation);
 };
 
 template <typename ShapeType>

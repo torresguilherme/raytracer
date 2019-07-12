@@ -195,7 +195,7 @@ Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& no
         else
         {
             occluded_colors.push_back(color * light.energy * (1 / light.const_aten) *
-            (1 / (light.prop_aten * ray_to_light.origin.euclid_distance(light.pos) * ray_to_light.origin.euclid_distance(light.pos))));
+                (1 / (light.prop_aten * ray_to_light.origin.euclid_distance(light.pos) * ray_to_light.origin.euclid_distance(light.pos))));
         }
     }
 

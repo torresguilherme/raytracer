@@ -58,8 +58,11 @@ int main(int argc, char **argv)
     scene.spheres.push_back(Shape<Sphere>(Vec(1.0, -0.25, 4.5), gold_material, Sphere(0.5)));
     scene.spheres.push_back(Shape<Sphere>(Vec(0.0, -100.5, 0.0), ground_material, Sphere(100.0)));
 
-    scene.lights.push_back(Light(Vec(3.5, 2.5, 3.0), Vec(1.0, 1.0, 1.0), 1.0, 1.0, 15.0));
-    scene.lights.push_back(Light(Vec(-3.5, 2.5, 3.0), Vec(1.0, 1.0, 1.0), 1.0, 1.0, 15.0));
+    scene.meshes.push_back(Shape<Mesh>(Vec(0.0, -0.25, 3.0), red_material, 
+        Mesh("tst/cube.obj", FLAT_SHADING, Vec(1.0, 1.0, 1.0), Vec())));
+
+    scene.lights.push_back(Light(Vec(3.5, 2.5, 1.5), Vec(1.0, 1.0, 1.0), 1.0, 1.0, 15.0));
+    scene.lights.push_back(Light(Vec(-3.5, 2.5, 1.5), Vec(1.0, 1.0, 1.0), 1.0, 1.0, 15.0));
 
     std::cout<<"Casting rays\n";
     ThreadPool<std::function<void()>> pool(num_threads);
