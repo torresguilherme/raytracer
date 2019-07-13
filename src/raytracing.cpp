@@ -189,9 +189,9 @@ template<> std::tuple<float, Vec, Vec> intersects<Mesh>(const Scene& scene, cons
     return std::make_tuple(-1, SKY, Vec());
 }
 
-std::tuple<float, Vec, Vec> intersect_with_triangle(const Scene& scene, const Shape<Mesh>& shape, const Ray& ray, const Vec& v1, const Vec& v2, const Vec& v3, const Vec& n1, const Vec& n2, const Vec& n3)
+float intersect_with_triangle(const Scene& scene, const Shape<Mesh>& shape, const Ray& ray, const Vec& v1, const Vec& v2, const Vec& v3, const Vec& n1, const Vec& n2, const Vec& n3)
 {
-    return std::make_tuple(-1, SKY, Vec());
+    return -1;
 }
 
 Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& normal)
