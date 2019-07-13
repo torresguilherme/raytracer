@@ -85,7 +85,7 @@ Vec Vec::operator/(float scalar) const
 
 /*****************************************/
 
-Vec Ray::point_at_t(float t)
+Vec Ray::point_at_t(float t) const
 {
     return this->origin + this->dir * t;
 }

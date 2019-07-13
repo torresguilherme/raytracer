@@ -47,7 +47,7 @@ struct Ray
     dir(d.normalize())
     {};
 
-    Vec point_at_t(float t);
+    Vec point_at_t(float t) const;
 };
 
 struct Camera

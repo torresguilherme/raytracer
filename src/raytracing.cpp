@@ -3,6 +3,7 @@
 #include <iostream>
 #include <random>
 #include <mutex>
+#include <cstring>
 
 Vec SKY = Vec(0.2, 0.5, 0.7);
 const float pixel_lenght = 0.005;
@@ -79,19 +80,30 @@ Vec trace_rays_in_pixel(const Scene& scene, short row, short col, short width, s
     return mean(colors) * 255.0;
 }
 
-std::tuple<float, Vec, Vec> get_next_intersection(const Scene& scene, Ray ray, bool occlusion, bool is_refracted, bool self_collision)
+std::tuple<float, Vec, Vec> get_next_intersection(const Scene& scene, const Ray& ray, bool occlusion, bool is_refracted, bool self_collision)
 {
     float min_distance = vision_range;
     Vec color = SKY;
     Vec normal = Vec();
-    for(auto sphere : scene.spheres)
+    for(auto const &sphere : scene.spheres)
     {
-        std::pair<float, Vec> intersection = intersects(scene, sphere, ray, SPHERE_KIND, occlusion, is_refracted, self_collision);
-        if(intersection.first < min_distance && intersection.first > 0)
+        std::tuple<float, Vec, Vec> intersection = intersects(scene, sphere, ray, occlusion, is_refracted, self_collision);
+        if(std::get<0>(intersection) < min_distance && std::get<0>(intersection) > 0)
         {
-            min_distance = intersection.first;
-            color = intersection.second;
-            normal = (ray.point_at_t(min_distance) - sphere.position).normalize();
+            min_distance = std::get<0>(intersection);
+            color = std::get<1>(intersection);
+            normal = std::get<2>(intersection);
+        }
+    }
+
+    for(auto const &mesh : scene.meshes)
+    {
+        std::tuple<float, Vec, Vec> intersection = intersects(scene, mesh, ray, occlusion, is_refracted, self_collision);
+        if(std::get<0>(intersection) < min_distance && std::get<0>(intersection) > 0)
+        {
+            min_distance = std::get<0>(intersection);
+            color = std::get<1>(intersection);
+            normal = std::get<2>(intersection);
         }
     }
 
@@ -103,80 +115,83 @@ std::tuple<float, Vec, Vec> get_next_intersection(const Scene& scene, Ray ray, b
     return std::make_tuple(-1, SKY, Vec());
 }
 
-template <typename ShapeType>
-std::pair<float, Vec> intersects(const Scene& scene, const Shape<ShapeType>& shape, Ray ray, const int type, bool occlusion, bool is_refracted, bool self_collision)
+template<> std::tuple<float, Vec, Vec> intersects<Sphere>(const Scene& scene, const Shape<Sphere>& shape, const Ray& ray, const int type, bool occlusion, bool is_refracted, bool self_collision)
 {
-    switch (type)
+    Vec oc = ray.origin - shape.position;
+    float a = ray.dir.dot(ray.dir);
+    float b = 2 * oc.dot(ray.dir);
+    float c = oc.dot(oc) - shape.shape_type.radius * shape.shape_type.radius;
+    float discriminant = b * b - 4 * a * c;
+    if(discriminant > 0)
     {
-        case SPHERE_KIND:
+        float solution = (-b - sqrt(discriminant)) / (2 * a);
+        if (solution < too_near && !self_collision)
         {
-            Vec oc = ray.origin - shape.position;
-            float a = ray.dir.dot(ray.dir);
-            float b = 2 * oc.dot(ray.dir);
-            float c = oc.dot(oc) - shape.shape_type.radius * shape.shape_type.radius;
-            float discriminant = b * b - 4 * a * c;
-            if(discriminant > 0)
-            {
-                float solution = (-b - sqrt(discriminant)) / (2 * a);
-                if (solution < too_near && !self_collision)
-                {
-                    return std::make_pair(-1, SKY);
-                }
-
-                if (shape.material.type == LAMBERT_TYPE)
-                {
-                    return std::make_pair(solution, shape.material.albedo * shape.material.lambert.k_diffuse);
-                }
-                else if(shape.material.type == REFLECT_TYPE)
-                {
-                    Ray reflected_ray = Ray(
-                        ray.point_at_t(solution),
-                        ray.dir.reflect((ray.point_at_t(solution) - shape.position).normalize()) + 
-                            Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.reflect.fuzz
-                    );
-
-                    std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, is_refracted, false);
-                    return std::make_pair(solution, 
-                        std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.reflect.k_attenuation)
-                    );
-                }
-                else if(shape.material.type == DIELECTRIC_TYPE)
-                {
-                    if(is_refracted)
-                    {
-                        Ray reflected_ray = Ray(
-                            ray.point_at_t(solution),
-                            ray.dir.refract((ray.point_at_t(solution) - shape.position).normalize(), shape.material.dielectric.k_refraction) + 
-                                Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.dielectric.fuzz
-                        );
-
-                        std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, false, false);
-                        return std::make_pair(solution, 
-                            std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation)
-                        );
-                    }
-                    else
-                    {
-                        Ray reflected_ray = Ray(
-                            ray.point_at_t(solution),
-                            ray.dir.refract((ray.point_at_t(solution) - shape.position).normalize(), 1.0/shape.material.dielectric.k_refraction) + 
-                                Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.dielectric.fuzz
-                        );
-                        std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, true, false);
-                        return std::make_pair(!occlusion ? solution : std::get<0>(result), 
-                            std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation)
-                        );
-                    }
-                }
-            }
-            break;
+            return std::make_tuple(-1, SKY, Vec());
         }
 
-        default:
-            return std::make_pair(-1, SKY);
-    }
+        Vec normal = (ray.point_at_t(solution) - shape.position).normalize();
 
-    return std::make_pair(-1, SKY);
+        if (shape.material.type == LAMBERT_TYPE)
+        {
+            return std::make_tuple(solution, shape.material.albedo * shape.material.lambert.k_diffuse, normal);
+        }
+        else if(shape.material.type == REFLECT_TYPE)
+        {
+            Ray reflected_ray = Ray(
+                ray.point_at_t(solution),
+                ray.dir.reflect((ray.point_at_t(solution) - shape.position).normalize()) + 
+                    Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.reflect.fuzz
+            );
+
+            std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, is_refracted, false);
+            return std::make_tuple(solution, 
+                std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.reflect.k_attenuation),
+                normal
+            );
+        }
+        else if(shape.material.type == DIELECTRIC_TYPE)
+        {
+            if(is_refracted)
+            {
+                Ray reflected_ray = Ray(
+                    ray.point_at_t(solution),
+                    ray.dir.refract((ray.point_at_t(solution) - shape.position).normalize(), shape.material.dielectric.k_refraction) + 
+                        Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.dielectric.fuzz
+                );
+
+                std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, false, false);
+                return std::make_tuple(solution, 
+                    std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation),
+                    normal
+                );
+            }
+            else
+            {
+                Ray reflected_ray = Ray(
+                    ray.point_at_t(solution),
+                    ray.dir.refract((ray.point_at_t(solution) - shape.position).normalize(), 1.0/shape.material.dielectric.k_refraction) + 
+                        Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.dielectric.fuzz
+                );
+                std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, true, false);
+                return std::make_tuple(!occlusion ? solution : std::get<0>(result), 
+                    std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation),
+                    normal
+                );
+            }
+        }
+    }
+    return std::make_tuple(-1, SKY, Vec());
+}
+
+template<> std::tuple<float, Vec, Vec> intersects<Mesh>(const Scene& scene, const Shape<Mesh>& shape, const Ray& ray, const int type, bool occlusion, bool is_refracted, bool self_collision)
+{
+    return std::make_tuple(-1, SKY, Vec());
+}
+
+std::tuple<float, Vec, Vec> intersect_with_triangle(const Scene& scene, const Shape<Mesh>& shape, const Ray& ray, const Vec& v1, const Vec& v2, const Vec& v3, const Vec& n1, const Vec& n2, const Vec& n3)
+{
+    return std::make_tuple(-1, SKY, Vec());
 }
 
 Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& normal)
