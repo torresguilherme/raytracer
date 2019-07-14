@@ -25,7 +25,7 @@ struct Mesh
     std::vector<unsigned int> normal_indices;
     int shading_type;
 
-    Mesh(std::string filename, int shading_type, const Vec& scale, const Vec& translation);
+    Mesh(std::string filename, int shading_type, const Vec& scale);
 };
 
 template <typename ShapeType>

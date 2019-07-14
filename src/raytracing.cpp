@@ -115,7 +115,7 @@ std::tuple<float, Vec, Vec> get_next_intersection(const Scene& scene, const Ray&
     return std::make_tuple(-1, SKY, Vec());
 }
 
-template<> std::tuple<float, Vec, Vec> intersects<Sphere>(const Scene& scene, const Shape<Sphere>& shape, const Ray& ray, const int type, bool occlusion, bool is_refracted, bool self_collision)
+template<> std::tuple<float, Vec, Vec> intersects<Sphere>(const Scene& scene, const Shape<Sphere>& shape, const Ray& ray, bool occlusion, bool is_refracted, bool self_collision)
 {
     Vec oc = ray.origin - shape.position;
     float a = ray.dir.dot(ray.dir);
@@ -184,14 +184,138 @@ template<> std::tuple<float, Vec, Vec> intersects<Sphere>(const Scene& scene, co
     return std::make_tuple(-1, SKY, Vec());
 }
 
-template<> std::tuple<float, Vec, Vec> intersects<Mesh>(const Scene& scene, const Shape<Mesh>& shape, const Ray& ray, const int type, bool occlusion, bool is_refracted, bool self_collision)
+template<> std::tuple<float, Vec, Vec> intersects<Mesh>(const Scene& scene, const Shape<Mesh>& shape, const Ray& ray, bool occlusion, bool is_refracted, bool self_collision)
 {
+    float min_distance = vision_range;
+    uint index;
+    for(uint i = 0; i < shape.shape_type.vertex_indices.size(); i += 3)
+    {
+        float intersection = intersect_with_triangle(scene, shape, ray,
+            shape.shape_type.vertices[i] + shape.position,
+            shape.shape_type.vertices[i+1] + shape.position,
+            shape.shape_type.vertices[i+2] + shape.position);
+        if(intersection > 0 && intersection < min_distance)
+        {
+            min_distance = intersection;
+            index = i;
+        }
+    }
+
+    if(min_distance > 0 && min_distance < vision_range)
+    {
+        Vec normal1 = shape.shape_type.normals[shape.shape_type.normal_indices[index]];
+        Vec normal2 = shape.shape_type.normals[shape.shape_type.normal_indices[index + 1]];
+        Vec normal3 = shape.shape_type.normals[shape.shape_type.normal_indices[index + 2]];
+        Vec normal = normal1.interpolate(normal2, 0.5).interpolate(normal3, 0.5);
+        if(shape.shape_type.shading_type == PHONG_SHADING)
+        {
+            // apply interpolation proportional to vertex distance
+        }
+
+        // apply material effect
+        if(shape.material.type == LAMBERT_TYPE)
+        {
+            return std::make_tuple(min_distance, shape.material.albedo * shape.material.lambert.k_diffuse, normal);
+        }
+        else if(shape.material.type == REFLECT_TYPE)
+        {
+            Ray reflected_ray = Ray(
+                ray.point_at_t(min_distance),
+                ray.dir.reflect(normal) + 
+                    Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.reflect.fuzz
+            );
+
+            std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, is_refracted, false);
+            return std::make_tuple(min_distance, 
+                std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.reflect.k_attenuation),
+                normal
+            );
+        }
+        else if(shape.material.type == DIELECTRIC_TYPE)
+        {
+            if(is_refracted)
+            {
+                Ray reflected_ray = Ray(
+                    ray.point_at_t(min_distance),
+                    ray.dir.refract(normal, shape.material.dielectric.k_refraction) + 
+                        Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.dielectric.fuzz
+                );
+
+                std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, false, false);
+                return std::make_tuple(min_distance, 
+                    std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation),
+                    normal
+                );
+            }
+            else
+            {
+                Ray reflected_ray = Ray(
+                    ray.point_at_t(min_distance),
+                    ray.dir.refract(normal, 1.0/shape.material.dielectric.k_refraction) + 
+                        Vec(rand() / (double)RAND_MAX, rand() / (double)RAND_MAX, rand() / (double)RAND_MAX) * shape.material.dielectric.fuzz
+                );
+                std::tuple<float, Vec, Vec> result = get_next_intersection(scene, reflected_ray, occlusion, true, false);
+                return std::make_tuple(!occlusion ? min_distance : std::get<0>(result), 
+                    std::get<1>(result).interpolate(shape.material.albedo, 1 - shape.material.dielectric.k_attenuation),
+                    normal
+                );
+            }
+        }
+    }
+
     return std::make_tuple(-1, SKY, Vec());
 }
 
-float intersect_with_triangle(const Scene& scene, const Shape<Mesh>& shape, const Ray& ray, const Vec& v1, const Vec& v2, const Vec& v3, const Vec& n1, const Vec& n2, const Vec& n3)
+float intersect_with_triangle(const Scene& scene, const Shape<Mesh>& shape, const Ray& ray, const Vec& v0, const Vec& v1, const Vec& v2)
 {
-    return -1;
+    Vec edge0 = v1 - v0;
+    Vec edge1 = v2 - v1;
+    Vec edge2 = v0 - v2;
+
+    // compute plane intersection 
+    Vec v0v1 = v1 - v0;
+    Vec v0v2 = v2 - v0;
+    Vec plane_normal = v0v1.cross(v0v2);
+    float area2 = plane_normal.magnitude();
+
+    float n_dot_ray_dir = plane_normal.dot(ray.dir);
+    if(n_dot_ray_dir  < too_near)
+    {
+        // paralelas (ou quase), nao tem interseçao
+        return -1;
+    }
+
+    float d = plane_normal.dot(v0);
+
+    // compute t
+    float t = (plane_normal.dot(ray.origin) + d) / n_dot_ray_dir;
+
+    if(t < 0)
+    {
+        // triangulo esta atras do raio
+        return -1;
+    }
+
+    // compute intersection point
+    Vec intersection_point = ray.origin + ray.dir * t;
+
+    // inside/outside test
+    Vec vp0 = intersection_point - v0;
+    Vec cross = edge0.cross(vp0);
+    if(plane_normal.dot(cross) < 0)
+        return -1;
+
+    Vec vp1 = intersection_point - v1;
+    cross = edge1.cross(vp1);
+    if(plane_normal.dot(cross) < 0)
+        return -1;
+
+    Vec vp2 = intersection_point - v2;
+    cross = edge2.cross(vp2);
+    if(plane_normal.dot(cross) < 0)
+        return -1;
+
+    return t;
 }
 
 Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& normal)
