@@ -188,20 +188,20 @@ template<> std::tuple<float, Vec, Vec> intersects<Mesh>(const Scene& scene, cons
 {
     float min_distance = vision_range;
     uint index;
-    for(uint i = 0; i < shape.shape_type.vertex_indices.size(); i += 3)
+    for(uint i = 0; i < shape.shape_type.vertex_indices.size() / 3; i++)
     {
         float intersection = intersect_with_triangle(scene, shape, ray,
-            shape.shape_type.vertices[i] + shape.position,
-            shape.shape_type.vertices[i+1] + shape.position,
-            shape.shape_type.vertices[i+2] + shape.position);
-        if(intersection > 0 && intersection < min_distance)
+            shape.shape_type.vertices[shape.shape_type.vertex_indices[i*3]] + shape.position,
+            shape.shape_type.vertices[shape.shape_type.vertex_indices[i*3+1]] + shape.position,
+            shape.shape_type.vertices[shape.shape_type.vertex_indices[i*3+2]] + shape.position);
+        if(intersection > (self_collision ? 0 : too_near) && intersection < min_distance)
         {
             min_distance = intersection;
             index = i;
         }
     }
 
-    if(min_distance > 0 && min_distance < vision_range)
+    if(min_distance < vision_range)
     {
         Vec normal1 = shape.shape_type.normals[shape.shape_type.normal_indices[index]];
         Vec normal2 = shape.shape_type.normals[shape.shape_type.normal_indices[index + 1]];
@@ -279,7 +279,7 @@ float intersect_with_triangle(const Scene& scene, const Shape<Mesh>& shape, cons
     float area2 = plane_normal.magnitude();
 
     float n_dot_ray_dir = plane_normal.dot(ray.dir);
-    if(n_dot_ray_dir  < too_near)
+    if(n_dot_ray_dir < too_near)
     {
         // paralelas (ou quase), nao tem interseçao
         return -1;
