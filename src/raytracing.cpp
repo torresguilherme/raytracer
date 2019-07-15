@@ -203,9 +203,9 @@ template<> std::tuple<float, Vec, Vec> intersects<Mesh>(const Scene& scene, cons
 
     if(min_distance < vision_range)
     {
-        Vec normal1 = shape.shape_type.normals[shape.shape_type.normal_indices[index]];
-        Vec normal2 = shape.shape_type.normals[shape.shape_type.normal_indices[index + 1]];
-        Vec normal3 = shape.shape_type.normals[shape.shape_type.normal_indices[index + 2]];
+        Vec normal1 = shape.shape_type.normals[shape.shape_type.normal_indices[index*3]];
+        Vec normal2 = shape.shape_type.normals[shape.shape_type.normal_indices[index*3 + 1]];
+        Vec normal3 = shape.shape_type.normals[shape.shape_type.normal_indices[index*3 + 2]];
         Vec normal = normal1.interpolate(normal2, 0.5).interpolate(normal3, 0.5);
         if(shape.shape_type.shading_type == PHONG_SHADING)
         {
