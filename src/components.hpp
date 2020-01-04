@@ -123,12 +123,12 @@ struct Material
     ReflectComponent reflect;
     DielectricComponent dielectric;
 
-    Material(int t, Vec a, float kd=0.0, float ka=0.0, float f=0.0, float kr=0.0):
+    Material(int t, Vec a, float k_diffuse=0.0, float k_attenuation=0.0, float fuzz=0.0, float k_refraction=0.0):
     type(t),
     albedo(a),
-    lambert(LambertComponent(kd)),
-    reflect(ReflectComponent(ka, f)),
-    dielectric(DielectricComponent(ka, kr, f))
+    lambert(LambertComponent(k_diffuse)),
+    reflect(ReflectComponent(k_attenuation, fuzz)),
+    dielectric(DielectricComponent(k_attenuation, k_refraction, fuzz))
     {};
 };
 

@@ -5,7 +5,6 @@
 #include <mutex>
 #include <cstring>
 
-Vec SKY = Vec(0.2, 0.5, 0.7);
 const float pixel_lenght = 0.005;
 const float vision_range = MAXFLOAT;
 const float too_near = 0.0005;
@@ -66,20 +65,30 @@ Vec trace_rays_in_pixel(const Scene& scene, short row, short col, short width, s
         ) - scene.camera.pos;
         Ray ray = Ray(scene.camera.pos, direction);
 
-        std::tuple<float, Vec, Vec, bool> tuple = get_next_intersection(scene, ray);
-        
-        Vec color = std::get<1>(tuple);
-        if(std::get<0>(tuple) > 0)
-        {
-            color = get_occlusion(scene, ray, std::get<0>(tuple), std::get<1>(tuple), std::get<2>(tuple));
-        }
-
-        colors.push_back(color);
+        colors.push_back(get_ray_color(scene, ray));
     }
-    
+
     return mean(colors) * 255.0;
 }
 
+Vec get_ray_color(const Scene& scene, const Ray& ray)
+{
+    PointPack pack = get_final_intersection(scene, ray);
+    return material_color(pack, scene);
+}
+
+PointPack get_final_intersection(const Scene& scene, const Ray& ray)
+{
+    PointPack ret;
+    return ret;
+}
+
+Vec material_color(PointPack& pack, const Scene& scene)
+{
+    return Vec();
+}
+
+/*
 std::tuple<float, Vec, Vec, bool> get_next_intersection(const Scene& scene, const Ray& ray, bool occlusion, bool is_refracted, bool self_collision)
 {
     float min_distance = vision_range;
@@ -352,3 +361,4 @@ Vec get_occlusion(const Scene& scene, Ray ray, float t, Vec color, const Vec& no
 
     return mean(occluded_colors);
 }
+*/

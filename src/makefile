@@ -1,5 +1,5 @@
 CC = clang++
-CFLAGS = -std=c++11
+CFLAGS = -O3 -std=c++11
 SRC = components.cpp scene.cpp raytracing.cpp thread_pool.cpp octree.cpp main.cpp
 LINKS = -lpthread
 
