@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     // declare materials
     Material red_material = Material(LAMBERT_TYPE, Vec(1.0, 0.0, 0.0), 0.7);
     Material gold_material = Material(REFLECT_TYPE, Vec(0.8, 0.8, 0.2), 0.0, 0.25, 0.6);
-    Material glass_material = Material(DIELECTRIC_TYPE, Vec(0.9, 0.9, 0.9), 0.0, 0.1, 0.0, 1.7);
+    Material glass_material = Material(REFLECT_TYPE, Vec(0.9, 0.9, 0.9), 0.0, 0.4, 0.2);
     Material ground_material = Material(LAMBERT_TYPE, Vec(0.2, 0.3, 0.2), 0.6);
 
     scene.spheres.push_back(Shape<Sphere>(Vec(0.0, 0.0, 5.0), red_material, Sphere(0.5)));
